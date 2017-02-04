@@ -1,0 +1,15 @@
+{application, rebar3_erllambda,
+ [{description, "Rebar3 plugin for erllambda functions"},
+  {vsn, "git"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env, []},
+  {modules, []},
+  {contributors, []},
+  {licenses, []},
+  {links,
+   [
+    {"algithub",
+     "https://algithub.pd.alertlogic.net/alertlogic/rebar3_erllambda"}
+   ]}
+ ]}.

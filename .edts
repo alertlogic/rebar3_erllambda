@@ -1,0 +1,2 @@
+:node-name `"dcopy-node"
+:lib-dirs '("_checkouts" "_build/test/lib" "_build/default/lib")
