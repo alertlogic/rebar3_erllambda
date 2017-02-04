@@ -57,10 +57,10 @@ init( State ) ->
 do( State ) ->
     try
         rebar_api:info("running erllambda release generator", []),
-        ErllambdaDir = erllambda_dir( State ),
+        ErllambdaDir = rebar3_erllambda:erllambda_dir( State ),
         StartScript = start_script( ErllambdaDir ),
         {Command, _} = HandlerInfo = handler_info( State ),
-        TargetDir = target_dir( State ),
+        TargetDir = rebar3_erllambda:target_dir( State ),
 
         generate_npm_install( ErllambdaDir, TargetDir ),
         generate_start_script( TargetDir, Command, StartScript ),
@@ -77,10 +77,8 @@ do( State ) ->
 %%%---------------------------------------------------------------------------
 %% @doc Format error for output
 %%
-format_error( {Error, Reason} ) ->
-    io_lib:format( "~s: ~s because ~p", [?MODULE, Error, Reason] );
 format_error( Error ) ->
-    io_lib:format( "~s: ~s", [?MODULE, Error] ).
+    rebar3_erllambda:format_error( Error ).
 
 
 %%============================================================================
@@ -89,7 +87,7 @@ format_error( Error ) ->
 generate_npm_install( ErllambdaDir, Dir ) ->
     rebar_api:info( "generating erllambda npm install", [] ),
     Command = [ErllambdaDir, "/priv/npm-install ", ErllambdaDir, $ , Dir],
-    case os_cmd( Command ) of
+    case rebar3_erllambda:os_cmd( Command ) of
         0 -> ok;
         Status -> throw( {npm_install_failed, Status} )
     end.
@@ -97,7 +95,7 @@ generate_npm_install( ErllambdaDir, Dir ) ->
 
 generate_start_script( Dir, Command, Script ) ->
     rebar_api:info( "generating start script bin/~s", [Command] ),
-    Filename = filename:join( [Dir, list(Command)] ),
+    Filename = filename:join( [Dir, rebar3_erllambda:list(Command)] ),
     case file:write_file( Filename, Script ) of
         ok -> generate_start_script( Filename );
         {error, Reason} -> throw( {generate_start_script_failed, Reason} )
@@ -115,8 +113,8 @@ generate_handler_file( Dir, {Command, Module} ) ->
     rebar_api:info( "generating config file etc/handler.json", [] ),
     Filename = filename:join( [Dir, "etc", "handler.json"] ),
     Content = iolist_to_binary(
-                ["{\"command\": \"", list(Command), "\","
-                 " \"module\": \"", list(Module), "\"}"] ),
+                ["{\"command\": \"", rebar3_erllambda:list(Command), "\","
+                 " \"module\": \"", rebar3_erllambda:list(Module), "\"}"] ),
     filelib:ensure_dir( Filename ),
     case file:write_file( Filename, Content ) of
         ok -> ok;
@@ -125,7 +123,7 @@ generate_handler_file( Dir, {Command, Module} ) ->
 
 
 handler_info( State ) ->
-    DefaultName = relx_release_name( State ),
+    DefaultName = rebar3_erllambda:release_name( State ),
     Config = rebar_state:get(State, erllambda, []),
     Module = proplists:get_value( module, Config, DefaultName ),
     {["bin/", DefaultName], Module}.
@@ -138,41 +136,3 @@ start_script( ErllambdaDir ) ->
         {error, Reason} ->
             throw( {erllambda_script_missing, Reason} )
     end.
-            
-    
-relx_release_name( State ) ->
-    case lists:keyfind( release, 1, rebar_state:get(State, relx, []) ) of
-        false -> throw( {relx_release_undefined, undefined} );
-        {release, {Name, _Vsn}, _} -> atom_to_list(Name)
-    end.
-            
-target_dir( State ) ->
-    ReleaseDir = filename:join( rebar_dir:base_dir(State), "rel" ),
-    ReleaseName = relx_release_name( State ),
-    filename:join( [ReleaseDir, ReleaseName] ).
-    
-
-erllambda_dir( State ) ->
-    ChkDir = filename:join( ["_checkouts", "erllambda"] ),
-    ProfDir = filename:join( [rebar_dir:base_dir(State), "lib", "erllambda"] ),
-    case {filelib:is_dir( ChkDir ), filelib:is_dir( ProfDir )} of
-        {true, _} -> filename:absname(ChkDir);
-        {_, true} -> ProfDir;
-        _Otherwise -> throw( erllambda_dep_missing )
-    end.
-            
-    
-list( V ) when is_atom(V) -> atom_to_list(V);
-list( V ) -> V.
-
-
-os_cmd( Command ) ->
-    Port = open_port( {spawn, Command}, [exit_status, in, stderr_to_stdout] ),
-    os_cmd_receive( Port ).
-
-os_cmd_receive( Port ) ->
-    receive
-	{Port, {data, _Output}} -> os_cmd_receive( Port );
-	{Port, {exit_status, Status}} -> Status
-    end.
-
