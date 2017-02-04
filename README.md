@@ -1,4 +1,4 @@
-erllambda
+rebar3_erllambda
 ===========
 
 Enable AWS Lambda function to be written in Erlang
@@ -6,7 +6,7 @@ Enable AWS Lambda function to be written in Erlang
 
 ## Overview
 
-The `erllambda` library provides all functionality needed to build and
+The `rebar3_erllambda` library provides all functionality needed to build and
 deploy fully functional [AWS Lambda](https://aws.amazon.com/lambda/)
 functions, written entirely in Erlang.
 
@@ -15,12 +15,12 @@ Erlang Lambda functions implement a simple one function, behavior:
 ```
 -module(hello_lambda).
 
--behavior(erllambda).
+-behavior(rebar3_erllambda).
 -export([handle/2]).
 
 -spec handle( Event :: map(), Context :: map() ) -> ok | none().
 handle( Event, Context ) ->
-    erllambda:succeed( "Hello World!" ).
+    rebar3_erllambda:succeed( "Hello World!" ).
 ```
 
 This function is then built into an Erlang application, and packaged as
@@ -29,7 +29,7 @@ applications/libraries needed to implement the intended functionality.
 
 The [makeincl](https://algithub.pd.alertlogic.net/alertlogic/makeincl)
 project provides support for developing and deploying AWS Lambda functions
-written using `erllambda` or simply with `node.js`.
+written using `rebar3_erllambda` or simply with `node.js`.
 
 A more detailed tutorial is located at
 [Writing AWS Lambda Functions in Erlang](doc/tutorial.md).
@@ -37,15 +37,15 @@ A more detailed tutorial is located at
 
 ## Ownership
 
-The `erllambda` application owned by the
+The `rebar3_erllambda` application owned by the
 [Data Processing Team](https://alertlogic.atlassian.net/wiki/display/DPT).
 
 
 ## Dependencies
 
-The `erllambda` application is built using
+The `rebar3_erllambda` application is built using
 [`rebar3`](http://www.rebar3.org), and all other dependencies are
-automatically pulled in when `erllambda` is used in other projects
+automatically pulled in when `rebar3_erllambda` is used in other projects
 `rebar.config`.
 
 In addition makefile support is available in
@@ -57,7 +57,7 @@ makes builds and pipeline integration trivial.
 
 Contributions to this repo are always welcome.  If you have an idea for
 improving the this or related components, please submit a
-[github issue](https://algithub.pd.alertlogic.net/alertlogic/erllambda/issues),
+[github issue](https://algithub.pd.alertlogic.net/alertlogic/rebar3_erllambda/issues),
 or simply submit a PR directly that implements your improvement.
 
 For complex changes, or the introduction of a major feature, it is
@@ -74,18 +74,18 @@ coverage percentage, and does not decrease it.
 
 If you encounter an problem, or simply have a question about using this
 repo, please submit a
-[github issue](https://algithub.pd.alertlogic.net/alertlogic/erllambda/issues).
+[github issue](https://algithub.pd.alertlogic.net/alertlogic/rebar3_erllambda/issues).
 
 
 ## Initial setup, compilation and testing
 
 *TLDR;* as long as your basic environment is setup, getting started
-developing `erllambda` should be as easy as forking the repo, and then:
+developing `rebar3_erllambda` should be as easy as forking the repo, and then:
 
 ```
-git clone git@algithub.pd.alertlogic.net:${USER}/erllambda.git
-cd erllambda
-git remote add upstream git@algithub.pd.alertlogic.net:alertlogic/erllambda.git
+git clone git@algithub.pd.alertlogic.net:${USER}/rebar3_erllambda.git
+cd rebar3_erllambda
+git remote add upstream git@algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git
 make env
 . .setenv
 make deps compile test
@@ -120,7 +120,7 @@ After initial setup, and in future shell sessions, only do the following is
 needed configure the environment for developement:
 
 ```sh
-cd erllambda
+cd rebar3_erllambda
 . .setenv
 ```
 
@@ -219,15 +219,15 @@ the following once on your machine:
   installed:
 
 ```sh
-(r18)nova-storm:erllambda pfisher$ vagrant box add centos7 https://github.com/holms/vagrant-centos7-box/releases/download/7.1.1503.001/CentOS-7.1.1503-x86_64-netboot.box
+(r18)nova-storm:rebar3_erllambda pfisher$ vagrant box add centos7 https://github.com/holms/vagrant-centos7-box/releases/download/7.1.1503.001/CentOS-7.1.1503-x86_64-netboot.box
 ==> box: Box file was not detected as metadata. Adding it directly...
 ==> box: Adding box 'centos7' (v0) for provider: 
     box: Downloading: https://github.com/holms/vagrant-centos7-box/releases/download/7.1.1503.001/CentOS-7.1.1503-x86_64-netboot.box
 ==> box: Successfully added box 'centos7' (v0) for 'virtualbox'!
-(r18)nova-storm:erllambda pfisher$ vagrant plugin install vagrant-scp
+(r18)nova-storm:rebar3_erllambda pfisher$ vagrant plugin install vagrant-scp
 Installing the 'vagrant-scp' plugin. This can take a few minutes...
 Installed the plugin 'vagrant-scp (0.5.6)'!
-(r18)nova-storm:erllambda pfisher$ 
+(r18)nova-storm:rebar3_erllambda pfisher$ 
 ```
 
 ### ssh-agent and github private keys
