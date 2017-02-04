@@ -17,7 +17,7 @@
 %% Constant Definitions
 %%============================================================================
 -define(PROVIDER, zip).
--define(NAMESPACE, default).
+-define(NAMESPACE, erllambda).
 -define(DEPS, [{?NAMESPACE, release}]).
 
 
@@ -35,7 +35,7 @@ init( State ) ->
                {module, ?MODULE},
                {namespace, ?NAMESPACE},
                {bare, true},
-               {deps, ?DEPS},
+               {deps, []},
                {example, "rebar3 erllambda zip"},
                {opts, relx:opt_spec_list()},
                {short_desc, "Rebar3 erllambda zip provider"},
@@ -52,7 +52,21 @@ init( State ) ->
 %% @doc Initialize the release provider
 %%
 do( State ) ->
-    {ok, State}.
+    try
+        rebar_api:info( "generating erllambda zip package", [] ),
+        ErllambdaDir = rebar3_erllambda:erllambda_dir( State ),
+        Zippath = rebar3_erllambda:zip_path( State ),
+        TargetDir = rebar3_erllambda:target_dir( State ),
+        Command = [ErllambdaDir, "/priv/lambda-zip ", Zippath, $ , TargetDir],
+        rebar_api:info( "executing: ~s", [Command] ),
+        case rebar3_erllambda:os_cmd( Command ) of
+            0 -> {ok, State};
+            Status -> throw( {zip_generate_failed, Status} )
+        end
+    catch
+        throw:Error ->
+            {error, format_error(Error)}
+    end.
 
 
 %%%---------------------------------------------------------------------------
@@ -61,9 +75,10 @@ do( State ) ->
 %% @doc Format error for output
 %%
 format_error( Error ) ->
-    io_lib:format( "~s: ~p", [?MODULE, Error] ).
+    rebar3_erllambda:format_error( Error ).
 
 
 %%============================================================================
 %% Internal Functions
 %%============================================================================
+
