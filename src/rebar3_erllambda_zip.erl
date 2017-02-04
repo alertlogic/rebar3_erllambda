@@ -14,6 +14,14 @@
 
 
 %%============================================================================
+%% Constant Definitions
+%%============================================================================
+-define(PROVIDER, zip).
+-define(NAMESPACE, default).
+-define(DEPS, [{?NAMESPACE, release}]).
+
+
+%%============================================================================
 %% API Functions
 %%============================================================================
 %%%---------------------------------------------------------------------------
@@ -22,8 +30,19 @@
 %% @doc Initialize the zip provider
 %%
 init( State ) ->
-    rebar3_erllambda_release:init(
-      rebar3_erllambda_zip:init( State ) ).
+    Options = [
+               {name, ?PROVIDER},
+               {module, ?MODULE},
+               {namespace, ?NAMESPACE},
+               {bare, true},
+               {deps, ?DEPS},
+               {example, "rebar3 erllambda zip"},
+               {opts, relx:opt_spec_list()},
+               {short_desc, "Rebar3 erllambda zip provider"},
+               {desc, "Generates a deployable AWS lambda zip file."}
+              ],
+    Provider = providers:create( Options ),
+    {ok, rebar_state:add_provider(State, Provider)}.
 
 
 %%%---------------------------------------------------------------------------

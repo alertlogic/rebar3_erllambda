@@ -12,5 +12,5 @@
 -export([init/1]).
 
 init( State ) ->
-    rebar3_erllambda_release:init(
-      rebar3_erllambda_zip:init( State ) ).
+    {ok, ReleaseState} = rebar3_erllambda_release:init( State ),
+    rebar3_erllambda_zip:init( ReleaseState ).
