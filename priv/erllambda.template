@@ -6,10 +6,11 @@
 {dir, "etc"}.
 {dir, "setup"}.
 {dir, "src"}.
+{dir, "test"}.
 {template, "templates/erllambda.edts", ".edts"}.
 {template, "templates/erllambda.gitignore", ".gitignore"}.
 {template, "templates/erllambda.setup.sh", "setup.sh"}.
-{chmod, "setup.sh", 8#666}.
+{chmod, "setup.sh", 8#755}.
 {template, "templates/erllambda.setenv", "setup/setenv"}.
 {template, "templates/erllambda.README.md", "README.md"}.
 {template, "templates/erllambda.makefile", "makefile"}.
@@ -20,3 +21,4 @@
 {template, "templates/erllambda.cfn", "etc/{{name}}.template"}.
 {template, "templates/erllambda.handler.erl", "src/{{name}}.erl"}.
 {template, "templates/erllambda.app.src", "src/{{name}}.app.src"}.
+{template, "templates/erllambda.dummy", "test/.dummy"}.
