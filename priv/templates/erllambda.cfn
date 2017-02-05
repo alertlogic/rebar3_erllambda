@@ -1,0 +1,144 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description" : "{{name}} lambda function",
+
+  "Parameters": {
+    "baseStackName": {
+      "Description": "Name of the stack name (or developer) being deployed",
+      "Type": "String"
+    },
+    "version": {
+      "Type": "String",
+      "Description": "Version of the lambda to deploy"
+    },
+    "artifactBucket": {
+      "Description": "S3 artifact bucket containing Lambda function file",
+      "Type": "String"
+    }
+  },
+  
+  "Conditions": {
+    "IsDev": {
+      "Fn::Not": [
+        {"Fn::Or": [
+          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-services"]},
+          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-integration"]}
+        ]}
+      ]
+    }
+  },
+  
+
+  "Resources": {
+    "Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": ["-", [{"Ref": "AWS::Region"}, {"Ref": "baseStackName"},
+                             "{{name}}"]]
+        },
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        }
+      }
+    },
+
+    "Function": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Join": ["-", [{"Ref": "AWS::Region"}, {"Ref": "baseStackName"},
+                             "{{name}}"]]
+        },
+        "Description": "Ingestion subsystem export lambda function",
+        "Code": {
+          "S3Bucket": {"Ref": "artifactBucket"},
+          "S3Key": {
+            "Fn::If": [
+              "IsDev",
+              {"Fn::Join": ["", [{"Ref": "baseStackName"},
+                                 "/{{name}}/{{name}}-",
+                                 {"Ref": "version"}, ".zip"]]},
+              {"Fn::Join": ["", ["{{name}}/{{name}}-",
+                                 {"Ref": "version"}, ".zip"]]}
+            ]
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {"Fn::GetAtt": ["Role", "Arn"]},
+        "Runtime": "nodejs4.3",
+        "MemorySize": 512,
+        "Timeout": 15
+      }
+    },
+
+    "Version": {
+      "Type": "AWS::Lambda::Version",
+      "Properties": {
+        "Description": "Version of Lambda function",
+        "FunctionName": {"Ref": "Function"}
+      }
+    },
+    
+    "Alias": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "Name": "PROD",
+        "FunctionName": {"Ref": "Function"},
+        "FunctionVersion": {"Fn::GetAtt": ["Version", "Version"]}
+      }
+    },
+    
+    "Policy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "{{name}}",
+        "Roles": [{"Ref": "Role"}],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "logging",
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+    "RoleArn": {
+      "Description": "The Arn of the role used for lambda execution",
+      "Value": {"Ref": "Role"}
+    },
+    "FunctionArn": {
+      "Description": "The Arn of the Lambda function.",
+      "Value": {"Fn::GetAtt": ["Function", "Arn"]}
+    },
+    "Version": {
+      "Description": "Currently deploy version of function",
+      "Value": {"Fn::GetAtt": ["Version", "Version"]}
+    }
+  }
+}

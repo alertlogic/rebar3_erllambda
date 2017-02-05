@@ -1,0 +1,7 @@
+-setcookie {{name}}_cookie
+
+-connect_all false
+-start_epmd false
+-smp
++K true
++W w

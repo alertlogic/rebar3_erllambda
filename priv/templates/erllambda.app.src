@@ -1,0 +1,11 @@
+{application, {{name}},
+ [{description, "erllambda function - {{name}}"},
+  {vsn, "git"},
+  {registered, []},
+  {applications, [kernel, stdlib, erllambda]},
+  {env,[]},
+  {modules, []},
+  {contributors, []},
+  {licenses, []},
+  {links, []}
+ ]}.

@@ -1,0 +1,21 @@
+{description, "This template does a thing"}.
+{variables, [
+  {name, "mylambda", "The name of the lambda application and module"}
+]}.
+{dir, "config"}.
+{dir, "etc"}.
+{dir, "setup"}.
+{dir, "src"}.
+{template, "templates/erllambda.edts", ".edts"}.
+{template, "templates/erllambda.gitignore", ".gitignore"}.
+{template, "templates/erllambda.setup.sh", "setup.sh"}.
+{template, "templates/erllambda.setenv", "setup/setenv"}.
+{template, "templates/erllambda.README.md", "README.md"}.
+{template, "templates/erllambda.makefile", "makefile"}.
+{template, "templates/erllambda.rebar.config", "rebar.config"}.
+{template, "templates/erllambda.sys.config", "config/sys.config"}.
+{template, "templates/erllambda.shell.config", "config/shell.config"}.
+{template, "templates/erllambda.vm.args", "config/vm.args"}.
+{template, "templates/erllambda.cfn", "etc/{{name}}.template"}.
+{template, "templates/erllambda.handler.erl", "src/{{name}}.erl"}.
+{template, "templates/erllambda.app.src", "src/{{name}}.app.src"}.
