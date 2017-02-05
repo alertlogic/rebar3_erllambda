@@ -1,4 +1,4 @@
-{description, "This template does a thing"}.
+{description, "Generates a working erllambda skeleton project"}.
 {variables, [
   {name, "mylambda", "The name of the lambda application and module"}
 ]}.
@@ -9,6 +9,7 @@
 {template, "templates/erllambda.edts", ".edts"}.
 {template, "templates/erllambda.gitignore", ".gitignore"}.
 {template, "templates/erllambda.setup.sh", "setup.sh"}.
+{chmod, "setup.sh", 8#666}.
 {template, "templates/erllambda.setenv", "setup/setenv"}.
 {template, "templates/erllambda.README.md", "README.md"}.
 {template, "templates/erllambda.makefile", "makefile"}.
