@@ -1,2 +1,2 @@
-:node-name `"erllambda_example-node"
+:node-name `"{{name}}-node"
 :lib-dirs '("_checkouts" "_build/test/lib" "_build/default/lib")
