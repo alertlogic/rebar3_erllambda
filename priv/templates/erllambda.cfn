@@ -22,7 +22,8 @@
       "Fn::Not": [
         {"Fn::Or": [
           {"Fn::Equals": [{"Ref": "baseStackName"}, "global-services"]},
-          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-integration"]}
+          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-integration"]},
+          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-services-staging"]}
         ]}
       ]
     }
