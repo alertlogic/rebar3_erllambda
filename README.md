@@ -62,16 +62,21 @@ globally available:
 {plugins,
  [
   {rebar3_erllambda,
-   {git, "algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
+   {git, "git@algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
     {branch, master}}}
  ]}.
 ```
 
-**NOTE:** Using the plugin globally does not appear to work for template
-generation as of `rebar3` version 3.3.5.  To work around this, you will need
-to create a bootstrap `rebar.config` file in your project directory.
-Hopefully, this will get resolved in `rebar3` and then this step will not be
-necessary.
+When you use this global plugin configuration later, you should ensure the
+plugin is up-to-date:
+
+```
+$ rebar3 plugins upgrade rebar3_erllambda
+===> Fetching rebar3_erllambda ({git,
+                                        "git@algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
+                                        {branch,master}})
+===> Compiling rebar3_erllambda
+```
 
 
 ### Bootstraping Your Environment (Mac OS)
