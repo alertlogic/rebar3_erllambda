@@ -115,7 +115,7 @@ file in the empty directory as follows:
 {plugins,
  [
   {rebar3_erllambda,
-   {git, "algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
+   {git, "git@algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
     {branch, master}}}
  ]}.
 ```
@@ -124,7 +124,7 @@ Once you have your project directory created, then you want to ask the
 plugin to generate the skeleton files for the project:
 
 ```
-$ rebar3 new -f name=eltest
+$ rebar3 new erllambda -f name=eltest
 ===> Fetching rebar3_erllambda ({git,
                                         "algithub.pd.alertlogic.net:alertlogic/rebar3_erllambda.git",
                                         {branch,master}})
