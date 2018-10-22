@@ -61,10 +61,7 @@ do( State ) ->
         StartScript = start_script( ErllambdaDir ),
         {Command, _} = HandlerInfo = handler_info( State ),
         TargetDir = rebar3_erllambda:target_dir( State ),
-
-        generate_npm_install( ErllambdaDir, TargetDir ),
         generate_start_script( TargetDir, Command, StartScript ),
-        generate_handler_file( TargetDir, HandlerInfo ),
         {ok, State}
     catch
         throw:Error ->
@@ -84,41 +81,22 @@ format_error( Error ) ->
 %%============================================================================
 %% Internal Functions
 %%============================================================================
-generate_npm_install( ErllambdaDir, Dir ) ->
-    rebar_api:info( "generating erllambda npm install", [] ),
-    Command = [ErllambdaDir, "/priv/npm-install ", ErllambdaDir, $ , Dir],
-    case rebar3_erllambda:os_cmd( Command ) of
-        0 -> ok;
-        Status -> throw( {npm_install_failed, Status} )
-    end.
-
-
 generate_start_script( Dir, Command, Script ) ->
     rebar_api:info( "generating start script bin/~s", [Command] ),
     Filename = filename:join( [Dir, rebar3_erllambda:list(Command)] ),
     case file:write_file( Filename, Script ) of
-        ok -> generate_start_script( Filename );
+        ok ->
+            ok = generate_start_script( Dir, Filename ),
+            %% create necessary symlink
+            ok = file:make_symlink( "/var/task/" ++ rebar3_erllambda:list(Command), filename:join( [Dir, "bootstrap"]));
         {error, Reason} -> throw( {generate_start_script_failed, Reason} )
     end.            
 
-generate_start_script( Filename ) ->
+generate_start_script( Dir, Filename ) ->
     Mode = 8#00755,
     case file:change_mode( Filename, Mode ) of
         ok -> ok;
         {error, Reason} -> throw( {generate_start_script_failed, Reason} )
-    end.            
-            
-
-generate_handler_file( Dir, {Command, Module} ) ->
-    rebar_api:info( "generating config file etc/handler.json", [] ),
-    Filename = filename:join( [Dir, "etc", "handler.json"] ),
-    Content = iolist_to_binary(
-                ["{\"command\": \"", rebar3_erllambda:list(Command), "\","
-                 " \"module\": \"", rebar3_erllambda:list(Module), "\"}"] ),
-    filelib:ensure_dir( Filename ),
-    case file:write_file( Filename, Content ) of
-        ok -> ok;
-        {error, Reason} -> throw( {generate_handler_file_failed, Reason} )
     end.            
 
 
