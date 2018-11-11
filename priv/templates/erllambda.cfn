@@ -79,9 +79,9 @@
             ]
           }
         },
-        "Handler": "index.handler",
+        "Handler": "{{name}}",
         "Role": {"Fn::GetAtt": ["Role", "Arn"]},
-        "Runtime": "nodejs6.10",
+        "Runtime": "byol",
         "MemorySize": 512,
         "Timeout": 15
       }
