@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT=$(readlink $0 || true)
+if [ -z $SCRIPT ]; then
+    SCRIPT=$0
+fi;
+SCRIPT_DIR="$(cd `dirname "$SCRIPT"` && pwd -P)"
+
+exec $SCRIPT_DIR/bin/{{ release_name }}

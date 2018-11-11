@@ -1,0 +1,13 @@
+#!/bin/sh
+
+zippath=$1
+shift
+
+srcdir=$1
+shift
+
+rm -rf ${zippath}
+
+(cd ${srcdir} &&
+     zip -q -r ${zippath} "$@" \
+         -x \*.a \*.c \*.h \*.o \*.erl \*.hrl \*.xrl \*.yrl \*.asn1)
