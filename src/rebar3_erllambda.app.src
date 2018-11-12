@@ -8,8 +8,5 @@
   {contributors, []},
   {licenses, []},
   {links,
-   [
-    {"algithub",
-     "https://algithub.pd.alertlogic.net/alertlogic/rebar3_erllambda"}
-   ]}
+   [{"GitHub", "https://github.com/alertlogic/erllambda_rebar3"}]}
  ]}.

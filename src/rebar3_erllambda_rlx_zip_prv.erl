@@ -1,3 +1,14 @@
+%%%---------------------------------------------------------------------------
+%% @doc rebar3_erllambda_rlx_zip_prv - Relx provider for zip packaging
+%%
+%% This module will package an erllambda function into a .zip file, suitable
+%% for deployment to AWS lambda.
+%%
+%%
+%% @copyright 2018 Alert Logic, Inc
+%% Licensed under the MIT License. See LICENSE file in the project
+%% root for full license information.
+%%%---------------------------------------------------------------------------
 -module(rebar3_erllambda_rlx_zip_prv).
 
 -behaviour(provider).

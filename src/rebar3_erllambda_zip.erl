@@ -1,14 +1,14 @@
 %%%---------------------------------------------------------------------------
 %% @doc rebar3_erllambda_zip - Package an erlang lambda function
 %%
-%% This module will package an erllambda function into a .zip file, suitable
-%% for deployment to AWS lambda.
+%% This module will call relx provider for packaging lambda function.
 %%
 %%
 %% @copyright 2017 Alert Logic, Inc
+%% Licensed under the MIT License. See LICENSE file in the project
+%% root for full license information.
 %%%---------------------------------------------------------------------------
 -module(rebar3_erllambda_zip).
--author('Paul Fisher <pfisher@alertlogic.com>').
 
 -export([init/1, do/1, format_error/1]).
 

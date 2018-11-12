@@ -1,3 +1,13 @@
+%%%---------------------------------------------------------------------------
+%% @doc rebar3_erllambda - Rebar3 plugin for erllambda functions
+%%
+%% This module initializes the rebar3 plugin.
+%%
+%%
+%% @copyright 2017 Alert Logic, Inc
+%% Licensed under the MIT License. See LICENSE file in the project
+%% root for full license information.
+%%%---------------------------------------------------------------------------
 -module(rebar3_erllambda).
 
 -export([init/1, format_error/1, add_property/4]).

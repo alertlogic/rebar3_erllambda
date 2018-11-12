@@ -1,3 +1,14 @@
+%%%---------------------------------------------------------------------------
+%% @doc rebar3_erllambda_release - Build a erlang lambda release
+%%
+%% This module will build an erllambda release on top of a standard relx
+%% release so that the result can just be started.
+%%
+%%
+%% @copyright 2017 Alert Logic, Inc
+%% Licensed under the MIT License. See LICENSE file in the project
+%% root for full license information.
+%%%---------------------------------------------------------------------------
 -module(rebar3_erllambda_release).
 
 -behaviour(provider).
