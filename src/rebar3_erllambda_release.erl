@@ -84,15 +84,21 @@ format_error( Error ) ->
 generate_start_script( Dir, Command, Script ) ->
     rebar_api:info( "generating start script bin/~s", [Command] ),
     Filename = filename:join( [Dir, rebar3_erllambda:list(Command)] ),
+    BootFilename = filename:join( [Dir, "bootstrap"]),
     case file:write_file( Filename, Script ) of
         ok ->
-            ok = generate_start_script( Dir, Filename ),
+            ok = make_executable(Filename ),
+            % it can already exist from previous run. remove it
+            % technically we can just keep it
+            % TODO rework for NO symlinks
+            file:delete(BootFilename),
             %% create necessary symlink
-            ok = file:make_symlink( "/var/task/" ++ rebar3_erllambda:list(Command), filename:join( [Dir, "bootstrap"]));
-        {error, Reason} -> throw( {generate_start_script_failed, Reason} )
+            ok = file:make_symlink(Filename, BootFilename);
+        {error, Reason} ->
+            throw( {generate_start_script_failed, Reason} )
     end.            
 
-generate_start_script( Dir, Filename ) ->
+make_executable(Filename ) ->
     Mode = 8#00755,
     case file:change_mode( Filename, Mode ) of
         ok -> ok;
