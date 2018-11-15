@@ -93,7 +93,7 @@ generate_start_script( Dir, Command, Script ) ->
             % TODO rework for NO symlinks
             file:delete(BootFilename),
             %% create necessary symlink
-            ok = file:make_symlink(Filename, BootFilename);
+            ok = file:make_symlink( "/var/task/" ++ rebar3_erllambda:list(Command), BootFilename);
         {error, Reason} ->
             throw( {generate_start_script_failed, Reason} )
     end.            
