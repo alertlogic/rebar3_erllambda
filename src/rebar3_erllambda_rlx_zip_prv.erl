@@ -33,9 +33,7 @@ init(State) ->
 do(State) ->
     {RelName, RelVsn} = rlx_state:default_configured_release(State),
     Release = rlx_state:get_realized_release(State, RelName, RelVsn),
-    BaseDir = rlx_state:base_output_dir(State),
-    OutputDir = rlx_state:output_dir(State),
-    make_zip(Release, BaseDir, OutputDir),
+    make_zip(Release, State),
     {ok, State}.
 
 -spec format_error(ErrorDetail::term()) -> iolist().
@@ -46,7 +44,9 @@ format_error(ErrorDetail) ->
 %% Internal Functions
 %%============================================================================
 
-make_zip(Release, BaseDir, OutputDir) ->
+make_zip(Release, State) ->
+    BaseDir = rlx_state:base_output_dir(State),
+    OutputDir = rlx_state:output_dir(State),
     Name = atom_to_list(rlx_release:name(Release)),
     Vsn = rlx_release:vsn(Release),
     ArchiveFile = filename:join(BaseDir, Name ++ "-" ++ Vsn ++ ".zip"),
