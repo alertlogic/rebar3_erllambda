@@ -33,8 +33,8 @@ init(State) ->
 do(State) ->
     {RelName, RelVsn} = rlx_state:default_configured_release(State),
     Release = rlx_state:get_realized_release(State, RelName, RelVsn),
-    OutputDir = rlx_state:output_dir(State),
-    make_zip(Release, OutputDir),
+    BaseDir = rlx_state:base_output_dir(State),
+    make_zip(Release, BaseDir),
     {ok, State}.
 
 -spec format_error(ErrorDetail::term()) -> iolist().
