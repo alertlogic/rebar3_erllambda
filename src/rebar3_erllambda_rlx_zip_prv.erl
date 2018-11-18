@@ -51,7 +51,7 @@ make_zip(Release, State) ->
     Vsn = rlx_release:vsn(Release),
     ArchiveFile = filename:join(BaseDir, Name ++ "-" ++ Vsn ++ ".zip"),
     Targets = [filename:join(OutputDir, T) || T <- archive_targets(Release)],
-    make_zip(ArchiveFile, OutputDir, Targets).
+    make_zip(ArchiveFile, BaseDir, Targets).
 
 %% Erlang zip library does not preserve execution flags, which is
 %% important for bootstrap file
