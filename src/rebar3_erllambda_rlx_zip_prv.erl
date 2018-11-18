@@ -34,7 +34,8 @@ do(State) ->
     {RelName, RelVsn} = rlx_state:default_configured_release(State),
     Release = rlx_state:get_realized_release(State, RelName, RelVsn),
     BaseDir = rlx_state:base_output_dir(State),
-    make_zip(Release, BaseDir),
+    OutputDir = rlx_state:output_dir(State),
+    make_zip(Release, BaseDir, OutputDir),
     {ok, State}.
 
 -spec format_error(ErrorDetail::term()) -> iolist().
@@ -45,11 +46,11 @@ format_error(ErrorDetail) ->
 %% Internal Functions
 %%============================================================================
 
-make_zip(Release, OutputDir) ->
+make_zip(Release, BaseDir, OutputDir) ->
     Name = atom_to_list(rlx_release:name(Release)),
     Vsn = rlx_release:vsn(Release),
-    ArchiveFile = filename:join(OutputDir, Name ++ "-" ++ Vsn ++ ".zip"),
-    Targets = archive_targets(Release),
+    ArchiveFile = filename:join(BaseDir, Name ++ "-" ++ Vsn ++ ".zip"),
+    Targets = [filename:join(OutputDir, T) || T <- archive_targets(Release)],
     make_zip(ArchiveFile, OutputDir, Targets).
 
 %% Erlang zip library does not preserve execution flags, which is
