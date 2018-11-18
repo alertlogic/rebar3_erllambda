@@ -5,12 +5,15 @@
 %%
 %%
 %% @copyright 2017 Alert Logic, Inc
-%% Licensed under the MIT License. See LICENSE file in the project
-%% root for full license information.
 %%%---------------------------------------------------------------------------
 -module(rebar3_erllambda).
+-author('Paul Fisher <pfisher@alertlogic.com>').
 
--export([init/1, format_error/1, add_property/4]).
+-export([init/1]).
+
+-export([format_error/1,
+         release_name/1, target_dir/1, erllambda_dir/1, zip_path/1,
+         list/1, os_cmd/1]).
 
 %%============================================================================
 %% Callback Functions
@@ -36,25 +39,54 @@ format_error( Error ) ->
     io_lib:format( "~s: ~s", [?MODULE, Error] ).
 
 
-%%%---------------------------------------------------------------------------
--spec add_property(
-    State :: rebar_state:t(),
-    ConfigKey :: atom(),
-    Key :: atom(),
-    Value :: term()) -> rebar_state:t().
-%%%---------------------------------------------------------------------------
-%% @doc add at the beginning of existing list of properties or add a new one
-%%
-add_property(State, ConfigKey, Key, Value) ->
-    Config = rebar_state:get(State, ConfigKey, []),
-    Properties = proplists:get_value(Key, Config, []),
-    Config1 = property_store(Key, Value, Properties, Config),
-    rebar_state:set(State, ConfigKey, Config1).
+release_name( State ) ->
+    case lists:keyfind( release, 1, rebar_state:get(State, relx, []) ) of
+        false -> throw( {relx_release_undefined, undefined} );
+        {release, {Name, _Vsn}, _} -> atom_to_list(Name)
+    end.
 
-%%============================================================================
-%% Internal functions
-%%============================================================================
-property_store(Key, Value, Properties, Config) when is_list(Value) ->
-    lists:keystore(Key, 1, Config, {Key, Value ++ Properties});
-property_store(Key, Value, Properties, Config)  ->
-    lists:keystore(Key, 1, Config, {Key, [Value | Properties]}).
+
+target_dir( State ) ->
+    ReleaseDir = filename:join( rebar_dir:base_dir(State), "rel" ),
+    ReleaseName = release_name( State ),
+    TargetDir = filename:join( [ReleaseDir, ReleaseName] ),
+    case filelib:is_dir( TargetDir ) of
+        true -> TargetDir;
+        false -> throw( {target_director_does_not_exist, TargetDir, undefined} )
+    end.
+
+
+zip_path( State ) ->
+    ProfileDir = rebar_dir:base_dir(State),
+    Version = git_version(),
+    ReleaseName = [release_name( State ), $-, Version, ".zip"],
+    filename:join( [ProfileDir, ReleaseName] ).
+
+
+git_version() ->
+    string:strip( os:cmd( "git describe" ), right, $\n ).
+
+
+erllambda_dir( State ) ->
+    ChkDir = filename:join( ["_checkouts", "erllambda"] ),
+    ProfDir = filename:join( [rebar_dir:base_dir(State), "lib", "erllambda"] ),
+    case {filelib:is_dir( ChkDir ), filelib:is_dir( ProfDir )} of
+        {true, _} -> filename:absname(ChkDir);
+        {_, true} -> ProfDir;
+        _Otherwise -> throw( erllambda_dep_missing )
+    end.
+
+
+list( V ) when is_atom(V) -> atom_to_list(V);
+list( V ) -> V.
+
+
+os_cmd( Command ) ->
+    Port = open_port( {spawn, Command}, [exit_status, in, stderr_to_stdout] ),
+    os_cmd_receive( Port ).
+
+os_cmd_receive( Port ) ->
+    receive
+	{Port, {data, _Output}} -> os_cmd_receive( Port );
+	{Port, {exit_status, Status}} -> Status
+    end.

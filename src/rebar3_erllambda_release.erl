@@ -6,10 +6,9 @@
 %%
 %%
 %% @copyright 2017 Alert Logic, Inc
-%% Licensed under the MIT License. See LICENSE file in the project
-%% root for full license information.
 %%%---------------------------------------------------------------------------
 -module(rebar3_erllambda_release).
+-author('Paul Fisher <pfisher@alertlogic.com>').
 
 -behaviour(provider).
 -export([init/1, do/1, format_error/1]).
@@ -40,7 +39,7 @@ init( State ) ->
                {deps, ?DEPS},
                {example, "rebar3 erllambda release"},
                {opts, relx:opt_spec_list()},
-               {short_desc, "Build lambda release of project"},
+               {short_desc, "Rebar3 erllambda release provider"},
                {desc,
                 "Performs erllamba specific release generation on top of the "
                 "standard rebar3 release generation."}
@@ -56,10 +55,18 @@ init( State ) ->
 %% @doc Initialize the release provider
 %%
 do( State ) ->
-    rebar_api:info("running erllambda release generator", []),
-    Overlay = overlay(State),
-    State1 = rebar3_erllambda:add_property(State, relx, overlay, Overlay),
-    rebar_relx:do(rlx_prv_release, "release", ?PROVIDER, State1).
+    try
+        rebar_api:info("running erllambda release generator", []),
+        ErllambdaDir = rebar3_erllambda:erllambda_dir( State ),
+        StartScript = start_script( ErllambdaDir ),
+        {Command, _} = HandlerInfo = handler_info( State ),
+        TargetDir = rebar3_erllambda:target_dir( State ),
+        generate_start_script( TargetDir, Command, StartScript ),
+        {ok, State}
+    catch
+        throw:Error ->
+            {error, format_error(Error)}
+    end.
 
 
 %%%---------------------------------------------------------------------------
@@ -74,28 +81,42 @@ format_error( Error ) ->
 %%============================================================================
 %% Internal Functions
 %%============================================================================
-overlay(State) ->
-    Config = rebar_state:get(State, rebar3_erllambda, []),
-    boot_overlay() ++ custom_hooks(Config).
+generate_start_script( Dir, Command, Script ) ->
+    rebar_api:info( "generating start script bin/~s", [Command] ),
+    Filename = filename:join( [Dir, rebar3_erllambda:list(Command)] ),
+    BootFilename = filename:join( [Dir, "bootstrap"]),
+    case file:write_file( Filename, Script ) of
+        ok ->
+            ok = make_executable(Filename ),
+            % it can already exist from previous run. remove it
+            % technically we can just keep it
+            % TODO rework for NO symlinks
+            file:delete(BootFilename),
+            %% create necessary symlink
+            ok = file:make_symlink( "/var/task/" ++ rebar3_erllambda:list(Command), BootFilename);
+        {error, Reason} ->
+            throw( {generate_start_script_failed, Reason} )
+    end.            
 
-custom_hooks(Config) ->
-    Hooks = proplists:get_value(hooks, Config, []),
-    PreStartHooks = proplists:get_value(pre_start, Hooks, []),
-    HookDir = "bin/pre-start-hooks",
-    HooksOverlay = hooks_overlay(PreStartHooks, HookDir),
-    case HooksOverlay of
-        [] ->
-            [];
-        _ ->
-            [{mkdir, HookDir} | HooksOverlay]
+make_executable(Filename ) ->
+    Mode = 8#00755,
+    case file:change_mode( Filename, Mode ) of
+        ok -> ok;
+        {error, Reason} -> throw( {generate_start_script_failed, Reason} )
+    end.            
+
+
+handler_info( State ) ->
+    DefaultName = rebar3_erllambda:release_name( State ),
+    Config = rebar_state:get(State, erllambda, []),
+    Module = proplists:get_value( module, Config, DefaultName ),
+    {["bin/", DefaultName], Module}.
+
+
+start_script( ErllambdaDir ) ->
+    ScriptFile = filename:join( [ErllambdaDir, "priv", "erlang-start"] ),
+    case file:read_file( ScriptFile ) of
+        {ok, Script} -> Script;
+        {error, Reason} ->
+            throw( {erllambda_script_missing, Reason} )
     end.
-
-hooks_overlay(Hooks, Directory) ->
-    [{template, Hook, filename:join(Directory, filename:basename(Hook))}
-     || Hook <- Hooks].
-
-boot_overlay() ->
-    PrivDir = code:priv_dir(rebar3_erllambda),
-    %% relx can't symlink
-    [{template, filename:join(PrivDir, "bootstrap"), "bootstrap"},
-     {template, filename:join(PrivDir, "bin"), "bin/{{ release_name }}"}].
