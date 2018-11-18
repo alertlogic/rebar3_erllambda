@@ -17,19 +17,6 @@
     }
   },
   
-  "Conditions": {
-    "IsDev": {
-      "Fn::Not": [
-        {"Fn::Or": [
-          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-services"]},
-          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-integration"]},
-          {"Fn::Equals": [{"Ref": "baseStackName"}, "global-services-staging"]}
-        ]}
-      ]
-    }
-  },
-  
-
   "Resources": {
     "Role": {
       "Type": "AWS::IAM::Role",
@@ -65,23 +52,18 @@
           "Fn::Join": ["-", [{"Ref": "AWS::Region"}, {"Ref": "baseStackName"},
                              "{{name}}"]]
         },
-        "Description": "Ingestion subsystem export lambda function",
+        "Description": "{{name}} Erlang lambda function",
         "Code": {
           "S3Bucket": {"Ref": "artifactBucket"},
           "S3Key": {
-            "Fn::If": [
-              "IsDev",
-              {"Fn::Join": ["", [{"Ref": "baseStackName"},
-                                 "/{{name}}/{{name}}-",
-                                 {"Ref": "version"}, ".zip"]]},
-              {"Fn::Join": ["", ["{{name}}/{{name}}-",
-                                 {"Ref": "version"}, ".zip"]]}
+            "Fn::Join": ["",
+              ["{{name}}/{{name}}-",{"Ref": "version"}, ".zip"]
             ]
           }
         },
         "Handler": "{{name}}",
         "Role": {"Fn::GetAtt": ["Role", "Arn"]},
-        "Runtime": "byol",
+        "Runtime": "provided",
         "MemorySize": 512,
         "Timeout": 15
       }

@@ -19,8 +19,7 @@ Instructions to do this can be found in
 
 ## Ownership
 
-The `{{name}}` application owned by the
-[Data Processing Team](https://alertlogic.atlassian.net/wiki/display/DPT).
+The `{{name}}` application owned by the [Awesome Team]().
 
 
 ## Dependencies
@@ -30,17 +29,12 @@ The `{{name}}` application is built using
 automatically pulled in when `{{name}}` is used in other projects
 `rebar.config`.
 
-In addition makefile support is available in
-[makeincl](https://algithub.pd.alertlogic.net/alertlogic/makeincl) with
-makes builds and pipeline integration trivial.
-
 
 ## How to contribute
 
 Contributions to this repo are always welcome.  If you have an idea for
 improving the this or related components, please submit a
-[github issue](https://algithub.pd.alertlogic.net/alertlogic/{{name}}/issues),
-or simply submit a PR directly that implements your improvement.
+github issue or simply submit a PR directly that implements your improvement.
 
 For complex changes, or the introduction of a major feature, it is
 beneficial to discuss ideas before implementing them, so that your efforts
@@ -55,8 +49,7 @@ coverage percentage, and does not decrease it.
 ## How to report defects
 
 If you encounter an problem, or simply have a question about using this
-repo, please submit a
-[github issue](https://algithub.pd.alertlogic.net/alertlogic/{{name}}/issues).
+repo, please submit a github issue.
 
 
 ## Running this Project
@@ -64,7 +57,7 @@ repo, please submit a
 Initially, just clone and build the project.
 
 ```
-git clone git@algithub.pd.alertlogic.net:alertlogic/{{name}}.git
+git clone git@github.com:alertlogic/{{name}}.git
 cd {{name}}
 make env
 . .setenv
@@ -79,6 +72,7 @@ make package
 make stack-create
 make invoke
 ```
+
 
 **NOTE:** this will use your *default* project located in your
 `$HOME/.aws/credentials` file.  If you have not yet create this file, you
