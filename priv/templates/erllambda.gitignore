@@ -19,7 +19,6 @@
 *.exe
 *.out
 *.beam
-.setenv
 _build
 _checkouts
 .rebar3
@@ -28,5 +27,4 @@ compile_commands.json
 *.crashdump
 rebar.lock
 *.dump
-node_modules
 *.log

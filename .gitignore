@@ -16,3 +16,4 @@ log
 .idea
 compile_commands.json
 .rebar3
+rebar.lock
