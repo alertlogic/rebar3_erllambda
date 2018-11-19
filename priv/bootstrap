@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT=$(readlink $0 || true)
+if [ -z $SCRIPT ]; then
+    SCRIPT=$0
+fi;
+SCRIPT_DIR="$(cd `dirname "$SCRIPT"` && pwd -P)"
+
+# temporary migration folders
+# specific to some of Alert Logic application
+# harmless to other
+# to be removed later
+echo "creating necessary erllambda run dirs"
+export RUN_DIR="/tmp/erllambda_rundir"
+export VAR_DIR=${RUN_DIR}
+$(mkdir -p "${RUN_DIR}/cachefs")
+$(mkdir -p "${RUN_DIR}/checkpointfs")
+$(mkdir -p "${RUN_DIR}/tmpfs")
+$(mkdir -p "${RUN_DIR}/ramfs")
+
+exec $SCRIPT_DIR/bin/{{ release_name }}
