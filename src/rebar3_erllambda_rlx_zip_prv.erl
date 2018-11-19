@@ -33,8 +33,10 @@ init(State) ->
 do(State) ->
     {RelName, RelVsn} = rlx_state:default_configured_release(State),
     Release = rlx_state:get_realized_release(State, RelName, RelVsn),
-    OutputDir = rlx_state:output_dir(State),
-    make_zip(Release, OutputDir),
+    ReleaseDir = rlx_state:output_dir(State),
+    Targets = archive_targets(Release),
+    ArchivePath = archive_path(State, Release),
+    make_zip(ArchivePath, ReleaseDir, Targets),
     {ok, State}.
 
 -spec format_error(ErrorDetail::term()) -> iolist().
@@ -44,24 +46,22 @@ format_error(ErrorDetail) ->
 %%============================================================================
 %% Internal Functions
 %%============================================================================
+archive_path(State, Release) ->
+    Dir = rlx_state:base_output_dir(State),
+    FileName = archive_name(Release),
+    filename:join(Dir, FileName).
 
-make_zip(Release, OutputDir) ->
+archive_name(Release) ->
     Name = atom_to_list(rlx_release:name(Release)),
     Vsn = rlx_release:vsn(Release),
-    ArchiveFile = filename:join(OutputDir, Name ++ "-" ++ Vsn ++ ".zip"),
-    Targets = archive_targets(Release),
-    make_zip(ArchiveFile, OutputDir, Targets).
+    Name ++ "-" ++ Vsn ++ ".zip".
 
 %% Erlang zip library does not preserve execution flags, which is
 %% important for bootstrap file
 make_zip(ArchiveFile, SrcDir, Targets) ->
     Command = zip_cmd(ArchiveFile, SrcDir, Targets),
-    case os_cmd(Command) of
-        0 ->
-            ok;
-        Status ->
-            throw({zip_generate_failed, Status})
-    end.
+    rebar_api:info("Executing: ~s", [Command]),
+    {ok, []} = rebar_utils:sh(Command, [{use_stdout, false}, abort_on_error]).
 
 zip_cmd(ArchiveFile, SrcDir, Targets) ->
     Script = zip_script(),
@@ -76,16 +76,3 @@ archive_targets(Release) ->
     ErtsVersion = rlx_release:erts(Release),
     ErtsDir = "erts-" ++ ErtsVersion,
     [ErtsDir, "bin", "lib", "releases", "bootstrap"].
-
-os_cmd(Command) ->
-    rebar_api:info("Executing: ~s", [Command]),
-    Port = open_port({spawn, Command}, [exit_status, in, stderr_to_stdout]),
-    os_cmd_receive(Port).
-
-os_cmd_receive(Port) ->
-    receive
-	{Port, {data, _Output}} ->
-            os_cmd_receive(Port);
-	{Port, {exit_status, Status}} ->
-            Status
-    end.
