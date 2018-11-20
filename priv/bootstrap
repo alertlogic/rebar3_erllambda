@@ -20,4 +20,7 @@ $(mkdir -p "${RUN_DIR}/checkpointfs")
 $(mkdir -p "${RUN_DIR}/tmpfs")
 $(mkdir -p "${RUN_DIR}/ramfs")
 
+# we no need coredumps in Lambda
+export ERL_CRASH_DUMP="/dev/null"
+
 exec $SCRIPT_DIR/bin/{{ release_name }}
