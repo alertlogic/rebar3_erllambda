@@ -68,17 +68,9 @@ $ rebar3 plugins upgrade rebar3_erllambda
 
 ### Bootstraping Your Environment (Mac OS)
 
-If you are working on Mac OS, in addition to the instructions above, you
-will want to leverage the
+in addition to the instructions above, you will want to leverage the
 [erllambda_docker](https://github.com/alertlogic/erllambda_docker)
-project. to make development as simple as working directly on Linux.  To do
-so, follow the
-[Initial Setup](https://github/alertlogic/docker-image-makeincl/blob/master/README.md#initial-setup)
-instructions to get docker-machine working on your development system.  This
-will enable you to work natively from the command-line and even deploy your
-Lambda function directly from the Mac without any further build
-infrastructure.
-
+project. To make development as simple as working directly on Linux.  
 
 ### Generating A Skeleton
 
@@ -150,32 +142,105 @@ Now you are ready to do your first build and deploy.  To do so, simply
 execute the following:
 
 ```
+rebar3 get-deps
+rebar3 compile
+rebar3 erllambda zip
+```
+#### Deploying via CFN
+```
+# Create bucket
+aws s3api create-bucket --bucket erllambda-example
 
-Creating stack pfisher-eltest...
-{
-    "StackId": "arn:aws:cloudformation:us-west-2:468472542084:stack/pfisher-eltest/6bd7c1a0-ebc7-11e6-9c4c-50d5ca2e7cd2"
-}
-Waiting for stack create to complete...
-Done!
+# place the artifacts into the bucket
+
+aws s3 cp --profile integration --region us-east-1 \
+	  $(pwd)/${art} s3://erllambda-example/user/eltest/$(basename ${art});
+	  
+# Create stack 
+aws --profile default --region us-west-2 \
+ cloudformation create-stack --stack-name user-eltest \
+ --capabilities "CAPABILITY_NAMED_IAM" \
+ --template-url https://s3.us-west-2.amazonaws.com/erllambda-example/user/eltest/search-fetcher-0.0.0.template \
+ --parameters ParameterKey=artifactBucket,ParameterValue=uerllambda-example ParameterKey=baseStackName,ParameterValue=user
+ 
+# Wait until the stack creation is complete
+aws --profile default --region us-west-2 \
+ cloudformation wait stack-create-complete --stack-name user-eltest
 ```
 
+#### Deploying directly
+
+if you do not want to bother with ClodFormation, you can create a standalone function via:
+```
+aws lambda create-function \
+ --function-name helloByol \
+ --memory-size 1024 \
+ --handler eltest \
+ --zip-file fileb://_build/prod/eltest-0.0.0.zip \ 
+ --runtime provided \
+ --region us-west-2 \ 
+ --role <role-arn>
+```
+
+#### Running and invoking your Erlang Lamdba function
+
 With the Lambda function now deployed into your development account, go into
-the AWS Lambda console, find your function, and hit test (accepting the
-default test event document for now).  This should report that `"eltest:
-completed successfully"` and the CloudWatch Logs should show something like
+the AWS Lambda console, find your function, and hit Test button (accepting the
+default test event document for now).  
+
+You can also invoke your laptop
+```
+aws --profile default --region us-west-2 \
+ lambda invoke  --function-name us-west-2-user-eltest \
+  --log-type Tail \
+  --payload '{"msg": "hello"}' \
+  outputfile.txt
+```
+
+This should report that `"eltest:completed successfully"` and the CloudWatch Logs should show something like
 this:
 
 ```
-START RequestId: b0867638-ebc7-11e6-adad-5bbe0f75240a Version: $LATEST
-...
-2017-02-05T17:22:41.444Z	b0867638-ebc7-11e6-adad-5bbe0f75240a	eltest: Hello World! 
-...
-END RequestId: b0867638-ebc7-11e6-adad-5bbe0f75240a
-REPORT RequestId: b0867638-ebc7-11e6-adad-5bbe0f75240a	Duration: 1000.00 ms	Billed Duration: 1000 ms Memory Size: 512 MB	Max Memory Used: 66 MB
+creating necessary erllambda run dirs
+OpenSSL is OpenSSL 1.0.1k-fips 8 Jan 2015
+starting ErlangVM
+21:26:26.822005
+Exec: /var/task/erts-9.3.3.3/bin/erlexec -noshell -noinput -Bd -boot /var/task/releases/0.0.0/eltest -mode embedded -boot_var ERTS_LIB_DIR /var/task/erts-9.3.3.3/lib -config /tmp/erllambda_rundir/sys.config -args_file /tmp/erllambda_rundir/vm.args --
+Root: /var/task
+[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.883.0>},{id,erllambda_error_handler},{mfargs,{erllambda_error_handler,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
+[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.884.0>},{id,erllambda_config_srv},{mfargs,{erllambda_config_srv,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
+[{application,erllambda},{started_at,nonode@nohost}]
+[{application,eltest},{started_at,nonode@nohost}]
+Invoke Next path 1542749188444 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
+START RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f Version: $LATEST
+[context@36312 aid="f008e2a2-ed0a-11e8-8771-4d0719f73d5f"] 127.0.0.1 - - [20/Nov/2018:21:26:28 -0000] Invoke Next
+Next returns, in invoke 1542749188446
+Hello World!
+Invoke Success path 1542749188447 http://127.0.0.1:9001/2018-06-01/runtime/invocation/f008e2a2-ed0a-11e8-8771-4d0719f73d5f/response
+Invoke Next path 1542749188449 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
+END RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f
+REPORT RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f	Init Duration: 1645.22 ms	Duration: 3.91 ms	Billed Duration: 1700 ms Memory Size: 2048 MB	Max Memory Used: 114 MB	
 ```
 
 That's it! You new have an AWS Lambda function running in Erlang.
 
+### Updating Lambda code 
+
+To update your AWS Lambda after you made some changes to you code do the following
+```
+rebar3 compile
+rebar3 erllambda release
+rebar3 erllambda zip
+
+```
+update the function directly from your machine (for exact filename see `git describe` or `_build/prod` folder)
+
+```
+aws --profile default --region us-west-2 \
+ lambda update-function-code \
+ --function-name us-west-2-user-eltest \
+ --zip-file fileb://_build/prod/eltest-0.0.0-1-g6a8495c.zip
+```
 
 ## Dependencies
 

@@ -59,9 +59,7 @@ Initially, just clone and build the project.
 ```
 git clone git@github.com:alertlogic/{{name}}.git
 cd {{name}}
-make env
-. .setenv
-make deps compile test
+rebar3 get-deps compile ct
 ```
 
 Once build and all tests successfully pass, you can package the lambda
