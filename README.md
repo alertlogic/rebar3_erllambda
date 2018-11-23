@@ -282,7 +282,7 @@ developing `rebar3_erllambda` should be as easy as forking the repo, and then:
 git clone git@github.com:${USER}/rebar3_erllambda.git
 cd rebar3_erllambda
 git remote add upstream git@agithub.com:alertlogic/rebar3_erllambda.git
-rebar3 get-deps compile test
+rebar3 get-deps compile
 ```
 
 <!--- vim: sw=4 et ts=4 -->
