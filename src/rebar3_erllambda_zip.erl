@@ -54,8 +54,6 @@ do( State ) ->
     rebar_api:info( "generating erllambda zip package", [] ),
     State1 = rebar3_erllambda:add_property(
                State, relx, add_providers, rebar3_erllambda_rlx_zip_prv),
-    %% Internal tooling expects artifacts in this specific location, to be fixed
-    set_archive_dir(State1),
     rebar_relx:do(rebar3_erllambda_rlx_prv, "erllambda_zip", ?PROVIDER, State1).
 
 %%%---------------------------------------------------------------------------
@@ -70,6 +68,3 @@ format_error( Error ) ->
 %%============================================================================
 %% Internal Functions
 %%============================================================================
-set_archive_dir(State) ->
-    BaseDir = rebar_dir:base_dir(State),
-    put({rebar3_erllambda_rlx_zip_prv, archive_dir}, BaseDir).

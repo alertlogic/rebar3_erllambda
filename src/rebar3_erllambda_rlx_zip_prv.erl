@@ -47,17 +47,9 @@ format_error(ErrorDetail) ->
 %% Internal Functions
 %%============================================================================
 archive_path(State, Release) ->
-    Dir = archive_dir(State),
+    Dir = rlx_state:base_output_dir(State),
     FileName = archive_name(Release),
     filename:join(Dir, FileName).
-
-archive_dir(State) ->
-    case get({rebar3_erllambda_rlx_zip_prv, archive_dir}) of
-        undefined ->
-            rlx_state:base_output_dir(State);
-        Dir ->
-            Dir
-    end.
 
 archive_name(Release) ->
     Name = atom_to_list(rlx_release:name(Release)),
