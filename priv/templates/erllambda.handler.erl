@@ -4,14 +4,8 @@
 -export([handle/2]).
 
 %%---------------------------------------------------------------------------
--spec init(Context :: map() ) ->
+-spec handle( Event :: map(), Context :: map() ) ->
     ok | {ok, iolist() | map()} | {error, iolist()}.
-%%%---------------------------------------------------------------------------
-%% @doc Init lambda callback
-%%
-init( _Context ) ->
-    ok.
-
 %%%---------------------------------------------------------------------------
 %% @doc Handle lambda invocation
 %%
