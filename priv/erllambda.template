@@ -2,18 +2,14 @@
 {variables, [
   {name, "mylambda", "The name of the lambda application and module"}
 ]}.
-{dir, "config"}.
-{dir, "etc"}.
-{dir, "src"}.
-{dir, "test"}.
-{template, "templates/erllambda.edts", ".edts"}.
-{template, "templates/erllambda.gitignore", ".gitignore"}.
-{template, "templates/erllambda.README.md", "README.md"}.
-{template, "templates/erllambda.rebar.config", "rebar.config"}.
-{template, "templates/erllambda.sys.config", "config/sys.config"}.
-{template, "templates/erllambda.shell.config", "config/shell.config"}.
-{template, "templates/erllambda.vm.args", "config/vm.args"}.
-{template, "templates/erllambda.cfn", "etc/{{name}}.template"}.
-{template, "templates/erllambda.handler.erl", "src/{{name}}.erl"}.
-{template, "templates/erllambda.app.src", "src/{{name}}.app.src"}.
-{template, "templates/erllambda.dummy", "test/.dummy"}.
+{template, "templates/erllambda.edts",         "{{name}}/.edts"}.
+{template, "templates/erllambda.gitignore",    "{{name}}/.gitignore"}.
+{template, "templates/erllambda.README.md",    "{{name}}/README.md"}.
+{template, "templates/erllambda.rebar.config", "{{name}}/rebar.config"}.
+{template, "templates/erllambda.sys.config",   "{{name}}/config/sys.config"}.
+{template, "templates/erllambda.shell.config", "{{name}}/config/shell.config"}.
+{template, "templates/erllambda.vm.args",      "{{name}}/config/vm.args"}.
+{template, "templates/erllambda.cfn",          "{{name}}/etc/{{name}}.template"}.
+{template, "templates/erllambda.handler.erl",  "{{name}}/src/{{name}}.erl"}.
+{template, "templates/erllambda.app.src",      "{{name}}/src/{{name}}.app.src"}.
+{template, "templates/erllambda.dummy",        "{{name}}/test/.dummy"}.
