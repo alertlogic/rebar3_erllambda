@@ -30,7 +30,7 @@ installation of the [AWS CLI](https://aws.amazon.com/cli/).  Please follow
 the instruction available and validate that this works.
 
 Once the CLI is working, you will also need to ensure that you have at least
-a profil defined in your `~/.aws/credentials` file: `default` 
+a profile defined in your `~/.aws/credentials` file: `default`
 
 ```
 [default]
@@ -49,7 +49,7 @@ globally available:
 {plugins,
  [
   {rebar3_erllambda,
-   {git, "git@github/com:alertlogic/rebar3_erllambda.git",
+   {git, "git@github.com:alertlogic/rebar3_erllambda.git",
     {branch, master}}}
  ]}.
 ```
@@ -66,12 +66,6 @@ $ rebar3 plugins upgrade rebar3_erllambda
 ```
 
 
-### Bootstraping Your Environment (Mac OS)
-
-in addition to the instructions above, you will want to leverage the
-[erllambda_docker](https://github.com/alertlogic/erllambda_docker)
-project. To make development as simple as working directly on Linux.  
-
 ### Generating A Skeleton
 
 For each new Erlang Lambda function, you will want to start by using the
@@ -79,50 +73,22 @@ plugin to generate a skeleton for the project.  This will give you a fully
 functional Lambda function written in Erlang, which you can update to
 implement the desired functionality.
 
-To start, create a brand new directory in which you are going to development
-your new Lambda function:
+To start, ask the plugin to generate the skeleton files for the project:
 
 ```
-mkdir ~/src/eltest
-cd eltest
+$ rebar3 new erllambda name=eltest
+===> Writing eltest/.edts
+===> Writing eltest/.gitignore
+===> Writing eltest/README.md
+===> Writing eltest/rebar.config
+===> Writing eltest/config/sys.config
+===> Writing eltest/config/shell.config
+===> Writing eltest/config/vm.args
+===> Writing eltest/etc/eltest.template
+===> Writing eltest/src/eltest.erl
+===> Writing eltest/src/eltest.app.src
+===> Writing eltest/test/.dummy
 ```
-
-**NOTE:** as noted above, you will need to create a bootstrap `rebar.config`
-file in the empty directory as follows:
-
-```
-{plugins,
- [
-  {rebar3_erllambda,
-   {git, "git@github.com:alertlogic/rebar3_erllambda.git",
-    {branch, master}}}
- ]}.
-```
-
-Once you have your project directory created, then you want to ask the
-plugin to generate the skeleton files for the project:
-
-```
-$ rebar3 new erllambda -f name=eltest
-===> Fetching rebar3_erllambda ({git,
-                                        "github.com:alertlogic/rebar3_erllambda.git",
-                                        {branch,master}})
-===> Compiling rebar3_erllambda
-===> Writing .edts
-===> Writing .gitignore
-===> Writing README.md
-===> Writing rebar.config (forcibly overwriting)
-===> Writing config/sys.config
-===> Writing config/shell.config
-===> Writing config/vm.args
-===> Writing etc/eltest.template
-===> Writing src/eltest.erl
-===> Writing src/eltest.app.src
-```
-
-**NOTE:** for now you will need to pass the `-f` option to new to force it
-to overwrite the bootstrap `rebar.config` file with the working version from
-the template.
 
 Once skeleton generation is complete, then you will need to initialize the
 project directory as a git repo, check in the initial skeleton, and tag it.
@@ -131,41 +97,107 @@ the version number for your lambda function. To get this done, do the
 following: 
 
 ```
-rebar3 new -f erllambda name=eltest
 git init
 git add -A
 git commit -m "Initial Skeleton"
 git tag -m "Initial Skeleton" -a 0.0.0
 ```
 
-Now you are ready to do your first build and deploy.  To do so, simply
-execute the following:
+Now you are ready to do your first build and deploy.
 
+### Creating a package
+
+As it's noted in [erllambda docs](https://github.com/alertlogic/erllambda#openssl-version) it's
+advised to package Erlang release with ERTS which is built in an
+environment that is very close to AWS Lambda environment.
+
+[Erllambda docker repository](https://github.com/alertlogic/erllambda_docker) contains
+docker image definitions which aim to replicates the live AWS Lambda
+environment almost identically.
+
+Assuming that `erllambda` docker image is available locally (if not
+please see [repo docs](https://github.com/alertlogic/erllambda_docker#obtain-an-image)
+on how to obtain images).
+
+Depending on a project, you might consider the following options.
+
+#### Create package using erllambda container
+
+Run [rebar3 commands](#create-zip-package) from within erllambda container.
+
+Example:
+
+``` console
+docker run -it --rm -v `pwd`:/buildroot -w /buildroot erllambda:20.3 bash
 ```
+
+You might want to fetch all dependencies beforehand to delegate only
+build step:
+
+``` console
+rebar3 get-deps
+```
+
+#### Include ERTS
+
+Unless you already have pre-built ERTS, you can copy one from erllambda docker image.
+
+##### Copy ERTS from erllambda
+
+Copy erts from erllambda container
+
+``` console
+docker create --name erllambda erllambda:20.3
+docker cp erllambda:/usr/local/lib/erlang /tmp/20.3-lambda
+```
+
+##### Configure `relx` to include a specific ERTS
+
+In `rebar.config` configure relx to include into release a specific ERTS:
+
+``` erlang
+{relx,
+ [
+  %% ...
+  {include_erts, "/tmp/20.3-lambda"},
+  {system_libs, "/tmp/20.3-lambda"},
+  %% ...
+ ]
+}.
+```
+
+You can find more about cross-compilation in [rebar3 documentation](https://www.rebar3.org/docs/releases#section-cross-compiling).
+
+#### Create zip package
+
+``` console
 rebar3 get-deps
 rebar3 compile
+rebar3 release
 rebar3 erllambda zip
 ```
+
 #### Deploying via CFN
+
 ```
 # Create bucket
 aws s3api create-bucket --bucket erllambda-example
 
 # place the artifacts into the bucket
+aws s3 cp ./etc/eltest.template s3://erllambda-example/eltest/eltest.template
+aws s3 cp ./_build/default/eltest-0.0.0.zip s3://erllambda-example/eltest/eltest-0.0.0.zip
 
-aws s3 cp --profile integration --region us-east-1 \
-	  $(pwd)/${art} s3://erllambda-example/user/eltest/$(basename ${art});
-	  
-# Create stack 
-aws --profile default --region us-west-2 \
- cloudformation create-stack --stack-name user-eltest \
+# Create stack
+aws cloudformation create-stack \
+ --stack-name eltest-function \
  --capabilities "CAPABILITY_NAMED_IAM" \
- --template-url https://s3.us-west-2.amazonaws.com/erllambda-example/user/eltest/search-fetcher-0.0.0.template \
- --parameters ParameterKey=artifactBucket,ParameterValue=uerllambda-example ParameterKey=baseStackName,ParameterValue=user
- 
+ --template-url https://s3.amazonaws.com/erllambda-example/eltest/eltest.template \
+ --parameters ParameterKey=artifactBucket,ParameterValue=erllambda-example \
+              ParameterKey=baseStackName,ParameterValue=erllambda-eltest \
+              ParameterKey=version,ParameterValue=0.0.0
+
 # Wait until the stack creation is complete
-aws --profile default --region us-west-2 \
- cloudformation wait stack-create-complete --stack-name user-eltest
+aws cloudformation wait stack-create-complete --stack-name eltest-function
 ```
 
 #### Deploying directly
@@ -173,12 +205,11 @@ aws --profile default --region us-west-2 \
 if you do not want to bother with ClodFormation, you can create a standalone function via:
 ```
 aws lambda create-function \
- --function-name helloByol \
+ --function-name eltest-function \
  --memory-size 1024 \
  --handler eltest \
- --zip-file fileb://_build/prod/eltest-0.0.0.zip \ 
+ --zip-file fileb://_build/default/eltest-0.0.0.zip \
  --runtime provided \
- --region us-west-2 \ 
  --role <role-arn>
 ```
 
@@ -190,36 +221,41 @@ default test event document for now).
 
 You can also invoke your laptop
 ```
-aws --profile default --region us-west-2 \
- lambda invoke  --function-name us-west-2-user-eltest \
+aws lambda invoke \
+  --function-name us-east-1-erllambda-eltest-eltest \
   --log-type Tail \
   --payload '{"msg": "hello"}' \
   outputfile.txt
 ```
 
-This should report that `"eltest:completed successfully"` and the CloudWatch Logs should show something like
-this:
+This should report that `"eltest:completed successfully"` and the CloudWatch Logs should show something like this:
 
 ```
 creating necessary erllambda run dirs
 OpenSSL is OpenSSL 1.0.1k-fips 8 Jan 2015
 starting ErlangVM
-21:26:26.822005
-Exec: /var/task/erts-9.3.3.3/bin/erlexec -noshell -noinput -Bd -boot /var/task/releases/0.0.0/eltest -mode embedded -boot_var ERTS_LIB_DIR /var/task/erts-9.3.3.3/lib -config /tmp/erllambda_rundir/sys.config -args_file /tmp/erllambda_rundir/vm.args --
+20:57:54.350274
+Exec: /var/task/erts-9.3.3.5/bin/erlexec -noshell -noinput -Bd -boot /var/task/releases/0.0.0/eltest -mode embedded -boot_var ERTS_LIB_DIR /var/task/erts-9.3.3.5/lib -config /tmp/erllambda_rundir/sys.config -args_file /tmp/erllambda_rundir/vm.args --
 Root: /var/task
-[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.883.0>},{id,erllambda_error_handler},{mfargs,{erllambda_error_handler,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
-[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.884.0>},{id,erllambda_config_srv},{mfargs,{erllambda_config_srv,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
+
+=INFO REPORT==== 24-Nov-2018::20:57:54 ===
+Erllambda Starting at 1543093074927 with Env #{<SKIPPED>}
+=INFO REPORT==== 24-Nov-2018::20:57:54 ===
+initializing erllambda_poller for handler eltest[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.500.0>},{id,erllambda_error_handler},{mfargs,{erllambda_error_handler,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
+[{supervisor,{local,erllambda_sup}},{started,[{pid,<0.501.0>},{id,erllambda_config_srv},{mfargs,{erllambda_config_srv,start_link,[]}},{restart_type,permanent},{shutdown,15000},{child_type,worker}]}]
 [{application,erllambda},{started_at,nonode@nohost}]
 [{application,eltest},{started_at,nonode@nohost}]
-Invoke Next path 1542749188444 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
-START RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f Version: $LATEST
-[context@36312 aid="f008e2a2-ed0a-11e8-8771-4d0719f73d5f"] 127.0.0.1 - - [20/Nov/2018:21:26:28 -0000] Invoke Next
-Next returns, in invoke 1542749188446
+Invoke Next path 1543093075027 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
+[{supervisor,{local,inet_gethost_native_sup}},{started,[{pid,<0.507.0>},{mfa,{inet_gethost_native,init,[[]]}}]}]
+[{supervisor,{local,kernel_safe_sup}},{started,[{pid,<0.506.0>},{id,inet_gethost_native_sup},{mfargs,{inet_gethost_native,start_link,[]}},{restart_type,temporary},{shutdown,1000},{child_type,worker}]}]
+START RequestId: 9cd3db93-f02b-11e8-9962-2b5064aed8e6 Version: $LATEST
+[context@36312 aid="9cd3db93-f02b-11e8-9962-2b5064aed8e6"] 127.0.0.1 - - [24/Nov/2018:20:57:55 -0000] Invoke Next
+Next returns, in invoke 1543093075041
 Hello World!
-Invoke Success path 1542749188447 http://127.0.0.1:9001/2018-06-01/runtime/invocation/f008e2a2-ed0a-11e8-8771-4d0719f73d5f/response
-Invoke Next path 1542749188449 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
-END RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f
-REPORT RequestId: f008e2a2-ed0a-11e8-8771-4d0719f73d5f	Init Duration: 1645.22 ms	Duration: 3.91 ms	Billed Duration: 1700 ms Memory Size: 2048 MB	Max Memory Used: 114 MB	
+Invoke Success path 1543093075041 http://127.0.0.1:9001/2018-06-01/runtime/invocation/9cd3db93-f02b-11e8-9962-2b5064aed8e6/response
+Invoke Next path 1543093075042 http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
+END RequestId: 9cd3db93-f02b-11e8-9962-2b5064aed8e6
+REPORT RequestId: 9cd3db93-f02b-11e8-9962-2b5064aed8e6	Init Duration: 709.98 ms	Duration: 1.85 ms	Billed Duration: 800 ms Memory Size: 512 MB	Max Memory Used: 84 MB	
 ```
 
 That's it! You new have an AWS Lambda function running in Erlang.
@@ -233,13 +269,12 @@ rebar3 erllambda release
 rebar3 erllambda zip
 
 ```
-update the function directly from your machine (for exact filename see `git describe` or `_build/prod` folder)
+update the function directly from your machine (for exact filename see `git describe` or `_build/default` folder)
 
 ```
-aws --profile default --region us-west-2 \
- lambda update-function-code \
- --function-name us-west-2-user-eltest \
- --zip-file fileb://_build/prod/eltest-0.0.0-1-g6a8495c.zip
+aws lambda update-function-code \
+ --function-name us-east-1-erllambda-eltest-eltest \
+ --zip-file fileb://_build/default/eltest-0.0.0-1-g6a8495c.zip
 ```
 
 ## Dependencies
@@ -282,7 +317,7 @@ developing `rebar3_erllambda` should be as easy as forking the repo, and then:
 git clone git@github.com:${USER}/rebar3_erllambda.git
 cd rebar3_erllambda
 git remote add upstream git@agithub.com:alertlogic/rebar3_erllambda.git
-rebar3 get-deps compile test
+rebar3 get-deps compile
 ```
 
 <!--- vim: sw=4 et ts=4 -->
