@@ -63,23 +63,8 @@ rebar3 get-deps compile ct
 ```
 
 Once build and all tests successfully pass, you can package the lambda
-function and deploy it:
+function and deploy it.
 
-```
-make package
-make stack-create
-make invoke
-```
-
-
-**NOTE:** this will use your *default* project located in your
-`$HOME/.aws/credentials` file.  If you have not yet create this file, you
-likely have not setup the [aws cli](https://aws.amazon.com/cli/) and should
-do so immediately.
-
-Please see `etc/erllambda-example.template` to understand how the lambda
-function is deployed, and the `makefile` for how to further invoke your
-deployment.
-
+Packaging and deployment process is documented [here](https://github.com/alertlogic/rebar3_erllambda#creating-a-package).
 
 <!--- vim: sw=4 et ts=4 -->
