@@ -7,8 +7,7 @@ An AWS Lambda function build using Erlang.
 ## Overview
 
 The `{{name}}` is an [AWS Lambda](https://aws.amazon.com/lambda/)
-function implemented using the
-[erllambda](https://algithub.pd.alertlogic.net/alertlogic/erllambda)
+function implemented using the [erllambda](https://github.com/alertlogic/erllambda)
 application to implement the function using the Erlang language.
 
 This project can be complied and deployed from your local checkout into an
