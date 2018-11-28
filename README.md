@@ -140,6 +140,10 @@ rebar3 get-deps
 
 #### Include ERTS
 
+**NOTE:** This option won't work if there's a NIF dependency (like
+`jiffy`, which is used by `erllambda`) and release is built on OS
+different from AWS Lambda container's OS ("invalid ELF header" error).
+
 Unless you already have pre-built ERTS, you can copy one from erllambda docker image.
 
 ##### Copy ERTS from erllambda
