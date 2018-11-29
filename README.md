@@ -49,7 +49,7 @@ globally available:
 {plugins,
  [
   {rebar3_erllambda,
-   {git, "git@github.com:alertlogic/rebar3_erllambda.git",
+   {git, "https://github.com/alertlogic/rebar3_erllambda.git",
     {branch, master}}}
  ]}.
 ```
@@ -60,7 +60,7 @@ plugin is up-to-date:
 ```
 $ rebar3 plugins upgrade rebar3_erllambda
 ===> Fetching rebar3_erllambda ({git,
-                                        "git@github.com:alertlogic/rebar3_erllambda.git",
+                                        "https://github.com/alertlogic/rebar3_erllambda.git",
                                         {branch,master}})
 ===> Compiling rebar3_erllambda
 ```
