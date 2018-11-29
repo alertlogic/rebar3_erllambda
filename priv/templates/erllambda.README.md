@@ -56,7 +56,7 @@ repo, please submit a github issue.
 Initially, just clone and build the project.
 
 ```
-git clone git@github.com:alertlogic/{{name}}.git
+git clone https://github.com/alertlogic/{{name}}.git
 cd {{name}}
 rebar3 get-deps compile ct
 ```
