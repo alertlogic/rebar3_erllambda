@@ -6,7 +6,7 @@
   {env, []},
   {modules, []},
   {contributors, []},
-  {licenses, []},
+  {licenses, ["MIT"]},
   {links,
    [{"GitHub", "https://github.com/alertlogic/rebar3_erllambda"}]}
  ]}.
