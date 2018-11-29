@@ -48,9 +48,7 @@ globally available:
 ```
 {plugins,
  [
-  {rebar3_erllambda,
-   {git, "https://github.com/alertlogic/rebar3_erllambda.git",
-    {branch, master}}}
+  rebar3_erllambda
  ]}.
 ```
 
@@ -59,9 +57,8 @@ plugin is up-to-date:
 
 ```
 $ rebar3 plugins upgrade rebar3_erllambda
-===> Fetching rebar3_erllambda ({git,
-                                        "https://github.com/alertlogic/rebar3_erllambda.git",
-                                        {branch,master}})
+===> Fetching rebar3_erllambda ({pkg,<<"rebar3_erllambda">>,<<"1.1.0">>})
+...
 ===> Compiling rebar3_erllambda
 ```
 
