@@ -134,7 +134,7 @@ build step:
 rebar3 get-deps
 ```
 
-#### Include ERTS manually
+#### Include the ERTS manually
 
 **NOTE:** This method won't work if there's a NIF dependency (such as
 `jiffy`, which is used by `erllambda`) and release is built on OS
@@ -201,7 +201,8 @@ aws cloudformation wait stack-create-complete --stack-name eltest-function
 
 #### Deploying directly
 
-If you do not want to bother with ClodFormation, you can create a standalone function with:
+If you do not want to bother with CloudFormation, you can create a standalone function with:
+
 ```
 aws lambda create-function \
  --function-name eltest-function \
@@ -262,14 +263,15 @@ That's it! You now have an AWS Lambda function running in Erlang.
 
 ### Updating Lambda code 
 
-To update your AWS Lambda after you made some changes to you code do the following:
+To update your AWS Lambda after making some changes, run the following:
+
 ```
 rebar3 compile
 rebar3 erllambda release
 rebar3 erllambda zip
 
 ```
-Then update the function directly from your machine (for exact filename see `git describe` or `_build/default` folder)
+Then update the function directly from your machine:
 
 ```
 aws lambda update-function-code \
