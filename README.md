@@ -1,12 +1,12 @@
 rebar3_erllambda
 ===========
 
-Enable AWS Lambda function to be written in Erlang
+Enable AWS Lambda functions to be written in Erlang
 
 
 ## Overview
 
-The `rebar3_erllambda` implements a
+`rebar3_erllambda` implements a
 [Rebar3 Plugin](http://www.rebar3.org/docs/plugins) to facilitate the
 development of [AWS Lambda](https://aws.amazon.com/lambda/)
 functions, written entirely in Erlang.  This plugin works in concert with
@@ -104,28 +104,27 @@ Now you are ready to do your first build and deploy.
 
 ### Creating a package
 
-As it's noted in [erllambda docs](https://github.com/alertlogic/erllambda#openssl-version) it's
-advised to package Erlang release with ERTS which is built in an
-environment that is very close to AWS Lambda environment.
+As noted in [erllambda docs](https://github.com/alertlogic/erllambda#openssl-version) it's
+advised to package the Erlang release with an ERTS built in an
+environment that is very close to AWS Lambda environment.  There are two ways to get a proper ERTS: use a premade ERTS from a docker image or include a custom ERTS.
 
-[Erllambda docker repository](https://github.com/alertlogic/erllambda_docker) contains
-docker image definitions which aim to replicates the live AWS Lambda
+Using a premade ERTS from a docker image is highly recommended.  NIF dependencies (such as `jiffy`, which is used by `erllambda`) require the ERTS to be built in an environment very similar to the Lambda environment.  The docker image is specifically made for this.
+
+#### Using the erllambda docker container
+
+The [erllambda_docker repository](https://github.com/alertlogic/erllambda_docker) contains
+docker image definitions which aim to replicate the live AWS Lambda
 environment almost identically.
 
-Assuming that `erllambda` docker image is available locally (if not
+First, ensure that the `erllambda` docker image is available locally.  If not
 please see [repo docs](https://github.com/alertlogic/erllambda_docker#obtain-an-image)
-on how to obtain images).
+on how to obtain the images).
 
-Depending on a project, you might consider the following options.
-
-#### Create package using erllambda container
-
-Run [rebar3 commands](#create-zip-package) from within erllambda container.
-
-Example:
+Next, run the required [rebar3 commands](#create-a-zip-package) **from within erllambda container**:
 
 ``` console
 docker run -it --rm -v `pwd`:/buildroot -w /buildroot erllambda:20.3 bash
+# ... run the rebar3 commands linked above
 ```
 
 You might want to fetch all dependencies beforehand to delegate only
@@ -135,41 +134,40 @@ build step:
 rebar3 get-deps
 ```
 
-#### Include ERTS
+#### Include ERTS manually
 
-**NOTE:** This option won't work if there's a NIF dependency (like
+**NOTE:** This method won't work if there's a NIF dependency (such as
 `jiffy`, which is used by `erllambda`) and release is built on OS
-different from AWS Lambda container's OS ("invalid ELF header" error).
+different from AWS Lambda container's OS.  You may get an error that says 
+`invalid ELF header` or `{on_load_function_failed,jiffy}`.
 
-Unless you already have pre-built ERTS, you can copy one from erllambda docker image.
+Unless you already have pre-built ERTS, you can copy one from erllambda docker image:
 
-##### Copy ERTS from erllambda
+1. Copy ERTS from the erllambda container with the following:
 
-Copy erts from erllambda container
+	``` console
+	docker create --name erllambda erllambda:20.3
+	docker cp erllambda:/usr/local/lib/erlang /tmp/20.3-lambda
+	```
 
-``` console
-docker create --name erllambda erllambda:20.3
-docker cp erllambda:/usr/local/lib/erlang /tmp/20.3-lambda
-```
+2. Configure `relx` to include a specific ERTS
 
-##### Configure `relx` to include a specific ERTS
-
-In `rebar.config` configure relx to include into release a specific ERTS:
-
-``` erlang
-{relx,
- [
-  %% ...
-  {include_erts, "/tmp/20.3-lambda"},
-  {system_libs, "/tmp/20.3-lambda"},
-  %% ...
- ]
-}.
-```
+	In `rebar.config` configure relx to include into release a specific ERTS:
+	
+	``` erlang
+	{relx,
+	 [
+	  %% ...
+	  {include_erts, "/tmp/20.3-lambda"},
+	  {system_libs, "/tmp/20.3-lambda"},
+	  %% ...
+	 ]
+	}.
+	```
 
 You can find more about cross-compilation in [rebar3 documentation](https://www.rebar3.org/docs/releases#section-cross-compiling).
 
-#### Create zip package
+#### Create a zip package
 
 ``` console
 rebar3 get-deps
@@ -203,7 +201,7 @@ aws cloudformation wait stack-create-complete --stack-name eltest-function
 
 #### Deploying directly
 
-if you do not want to bother with ClodFormation, you can create a standalone function via:
+If you do not want to bother with ClodFormation, you can create a standalone function with:
 ```
 aws lambda create-function \
  --function-name eltest-function \
@@ -214,13 +212,14 @@ aws lambda create-function \
  --role <role-arn>
 ```
 
-#### Running and invoking your Erlang Lamdba function
+#### Invoking your Erlang Lambda function
 
 With the Lambda function now deployed into your development account, go into
 the AWS Lambda console, find your function, and hit Test button (accepting the
 default test event document for now).  
 
-You can also invoke your laptop
+You can also invoke it from your console:
+
 ```
 aws lambda invoke \
   --function-name us-east-1-erllambda-eltest-eltest \
@@ -259,23 +258,23 @@ END RequestId: 9cd3db93-f02b-11e8-9962-2b5064aed8e6
 REPORT RequestId: 9cd3db93-f02b-11e8-9962-2b5064aed8e6	Init Duration: 709.98 ms	Duration: 1.85 ms	Billed Duration: 800 ms Memory Size: 512 MB	Max Memory Used: 84 MB	
 ```
 
-That's it! You new have an AWS Lambda function running in Erlang.
+That's it! You now have an AWS Lambda function running in Erlang.
 
 ### Updating Lambda code 
 
-To update your AWS Lambda after you made some changes to you code do the following
+To update your AWS Lambda after you made some changes to you code do the following:
 ```
 rebar3 compile
 rebar3 erllambda release
 rebar3 erllambda zip
 
 ```
-update the function directly from your machine (for exact filename see `git describe` or `_build/default` folder)
+Then update the function directly from your machine (for exact filename see `git describe` or `_build/default` folder)
 
 ```
 aws lambda update-function-code \
  --function-name us-east-1-erllambda-eltest-eltest \
- --zip-file fileb://_build/default/eltest-0.0.0-1-g6a8495c.zip
+ --zip-file fileb://_build/default/eltest-$(git describe).zip
 ```
 
 ## Dependencies
@@ -292,7 +291,7 @@ improving the this or related components, please submit a
 [github issue](https://github.com/alertlogic/rebar3_erllambda/issues),
 or simply submit a PR directly that implements your improvement.
 
-For complex changes, or the introduction of a major feature, it is
+For complex changes or the introduction of a major feature, it is
 beneficial to discuss ideas before implementing them, so that your efforts
 can focus on pull requests that will be accepted more easily.
 
@@ -304,7 +303,7 @@ coverage percentage, and does not decrease it.
 
 ## How to report defects
 
-If you encounter an problem, or simply have a question about using this
+If you encounter a problem, or simply have a question about using this
 repo, please submit a
 [github issue](https://github.com/alertlogic/rebar3_erllambda/issues).
 
