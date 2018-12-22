@@ -11,6 +11,7 @@ RELEASE_ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 REL_NAME="{{ release_name }}"
 REL_VSN="{{ release_version }}"
 ERTS_VSN="{{ release_erts_version }}"
+CODE_LOADING_MODE="${CODE_LOADING_MODE:-embedded}"
 REL_DIR="$RELEASE_ROOT_DIR/releases/$REL_VSN"
 ERL_OPTS="{{ erl_opts }}"
 export ESCRIPT_NAME="${ESCRIPT_NAME-$SCRIPT}"
@@ -86,7 +87,8 @@ set -- "$ERL_OPTS"
 [ "$SYS_CONFIG" ] && set -- "$@" -config "$SYS_CONFIG"
 [ "$VM_ARGS" ] && set -- "$@" -args_file "$VM_ARGS"
 set -- "$@" -boot_var ERTS_LIB_DIR "$ERTS_LIB_DIR" -boot "$REL_DIR/$BOOTFILE" \
-    -noshell -noinput +Bd "$ARGS"
+    -mode "$CODE_LOADING_MODE" -noshell -noinput +Bd \
+    "$ARGS"
 
 erllambda_run_hooks "$PRE_START_HOOK_DIR"
 
