@@ -1,14 +1,14 @@
 %%%---------------------------------------------------------------------------
 %% @doc rebar3_erllambda_zip - Package an erlang lambda function
 %%
-%% This module will package an erllambda function into a .zip file, suitable
-%% for deployment to AWS lambda.
+%% This module will call relx provider for packaging lambda function.
 %%
 %%
 %% @copyright 2017 Alert Logic, Inc
+%% Licensed under the MIT License. See LICENSE file in the project
+%% root for full license information.
 %%%---------------------------------------------------------------------------
 -module(rebar3_erllambda_zip).
--author('Paul Fisher <pfisher@alertlogic.com>').
 
 -export([init/1, do/1, format_error/1]).
 
@@ -35,11 +35,10 @@ init( State ) ->
                {module, ?MODULE},
                {namespace, ?NAMESPACE},
                {bare, true},
-               {deps, []},
+               {deps, ?DEPS},
                {example, "rebar3 erllambda zip"},
                {opts, relx:opt_spec_list()},
-               {short_desc, "Rebar3 erllambda zip provider"},
-               {desc, "Generates a deployable AWS lambda zip file."}
+               {short_desc, "Generates a deployable AWS lambda zip file."}
               ],
     Provider = providers:create( Options ),
     {ok, rebar_state:add_provider(State, Provider)}.
@@ -52,22 +51,10 @@ init( State ) ->
 %% @doc Initialize the release provider
 %%
 do( State ) ->
-    try
-        rebar_api:info( "generating erllambda zip package", [] ),
-        ErllambdaDir = rebar3_erllambda:erllambda_dir( State ),
-        Zippath = rebar3_erllambda:zip_path( State ),
-        TargetDir = rebar3_erllambda:target_dir( State ),
-        Command = [ErllambdaDir, "/priv/lambda-zip ", Zippath, $ , TargetDir],
-        rebar_api:info( "executing: ~s", [Command] ),
-        case rebar3_erllambda:os_cmd( Command ) of
-            0 -> {ok, State};
-            Status -> throw( {zip_generate_failed, Status} )
-        end
-    catch
-        throw:Error ->
-            {error, format_error(Error)}
-    end.
-
+    rebar_api:info( "generating erllambda zip package", [] ),
+    State1 = rebar3_erllambda:add_property(
+               State, relx, add_providers, rebar3_erllambda_rlx_zip_prv),
+    rebar_relx:do(rebar3_erllambda_rlx_prv, "erllambda_zip", ?PROVIDER, State1).
 
 %%%---------------------------------------------------------------------------
 -spec format_error( Error :: any() ) -> iolist().
@@ -81,4 +68,3 @@ format_error( Error ) ->
 %%============================================================================
 %% Internal Functions
 %%============================================================================
-

@@ -1,0 +1,96 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT=$(readlink $0 || true)
+if [ -z $SCRIPT ]; then
+    SCRIPT=$0
+fi;
+SCRIPT_DIR="$(cd `dirname "$SCRIPT"` && pwd -P)"
+RELEASE_ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+REL_NAME="{{ release_name }}"
+REL_VSN="{{ release_version }}"
+ERTS_VSN="{{ release_erts_version }}"
+CODE_LOADING_MODE="${CODE_LOADING_MODE:-embedded}"
+REL_DIR="$RELEASE_ROOT_DIR/releases/$REL_VSN"
+ERL_OPTS="{{ erl_opts }}"
+export ESCRIPT_NAME="${ESCRIPT_NAME-$SCRIPT}"
+
+PRE_START_HOOK_DIR="$SCRIPT_DIR/pre-start-hooks"
+
+erllambda_run_hooks() {
+    HOOKS_DIR=$1
+    for HOOK in "$HOOKS_DIR"/*
+    do
+        if [ -x "$HOOK" ]; then
+            . "$HOOK"
+        fi
+    done
+}
+
+find_erts_dir() {
+    __erts_dir="$RELEASE_ROOT_DIR/erts-$ERTS_VSN"
+    if [ -d "$__erts_dir" ]; then
+        ERTS_DIR="$__erts_dir";
+        ROOTDIR="$RELEASE_ROOT_DIR"
+    else
+        __erl="$(which erl)"
+        code="io:format(\"~s\", [code:root_dir()]), halt()."
+        __erl_root="$("$__erl" -boot no_dot_erlang -noshell -eval "$code")"
+        ERTS_DIR="$__erl_root/erts-$ERTS_VSN"
+        ROOTDIR="$__erl_root"
+    fi
+}
+
+find_sys_config() {
+    __possible_sys="$REL_DIR/sys.config"
+    if [ -f "$__possible_sys" ]; then
+        SYS_CONFIG="$__possible_sys"
+    else 
+       if [ -L "$__possible_sys".orig ]; then
+          mv "$__possible_sys".orig "$__possible_sys"  
+          SYS_CONFIG="$__possible_sys"
+       fi
+    fi
+}
+
+find_vm_args() {
+    __possible_vm_args="$REL_DIR/vm.args"
+    if [ -f "$__possible_vm_args" ]; then
+        VM_ARGS="$__possible_vm_args"
+    else 
+       if [ -L "$__possible_vm_args".orig ]; then
+          mv "$__possible_vm_args".orig "$__possible_vm_args"  
+          VM_ARGS="$__possible_vm_args"
+       fi
+    fi
+}
+
+find_erts_dir
+find_sys_config
+find_vm_args
+export ROOTDIR="$RELEASE_ROOT_DIR"
+export HOME="$ROOTDIR"
+export BINDIR="$ERTS_DIR/bin"
+export EMU="beam"
+export PROGNAME="erl"
+export LD_LIBRARY_PATH="$ERTS_DIR/lib:$LD_LIBRARY_PATH"
+ERTS_LIB_DIR="$ERTS_DIR/../lib"
+[ -f "$REL_DIR/$REL_NAME.boot" ] && BOOTFILE="$REL_NAME" || BOOTFILE=start
+cd "$ROOTDIR"
+
+# Save extra arguments
+ARGS="$@"
+
+# Build arguments for erlexec
+set -- "$ERL_OPTS"
+[ "$SYS_CONFIG" ] && set -- "$@" -config "$SYS_CONFIG"
+[ "$VM_ARGS" ] && set -- "$@" -args_file "$VM_ARGS"
+set -- "$@" -boot_var ERTS_LIB_DIR "$ERTS_LIB_DIR" -boot "$REL_DIR/$BOOTFILE" \
+    -mode "$CODE_LOADING_MODE" -noshell -noinput +Bd \
+    "$ARGS"
+
+erllambda_run_hooks "$PRE_START_HOOK_DIR"
+
+# Boot the release
+exec $BINDIR/erlexec $@
