@@ -123,7 +123,7 @@ on how to obtain the images).
 Next, run the required [rebar3 commands](#create-a-zip-package) **from within erllambda container**:
 
 ``` console
-docker run -it --rm -v `pwd`:/buildroot -w /buildroot erllambda:20.3 bash
+docker run -it --rm -v `pwd`:/buildroot -w /buildroot alertlogic/erllambda:20.3 bash
 # ... run the rebar3 commands linked above
 ```
 
