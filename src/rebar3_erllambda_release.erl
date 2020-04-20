@@ -59,7 +59,7 @@ do( State ) ->
         rebar_api:info("running erllambda release generator", []),
         ErllambdaDir = rebar3_erllambda:erllambda_dir( State ),
         StartScript = start_script( ErllambdaDir ),
-        {Command, _} = HandlerInfo = handler_info( State ),
+        {Command, _} = handler_info( State ),
         TargetDir = rebar3_erllambda:target_dir( State ),
         generate_start_script( TargetDir, Command, StartScript ),
         {ok, State}
