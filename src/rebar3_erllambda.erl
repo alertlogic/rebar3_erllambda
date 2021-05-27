@@ -13,7 +13,7 @@
 
 -export([format_error/1,
          release_name/1, target_dir/1, erllambda_dir/1, zip_path/1,
-         list/1, os_cmd/1]).
+         list/1, os_cmd/1, opt_spec_list/0]).
 
 %%============================================================================
 %% Callback Functions
@@ -90,3 +90,12 @@ os_cmd_receive( Port ) ->
 	{Port, {data, _Output}} -> os_cmd_receive( Port );
 	{Port, {exit_status, Status}} -> Status
     end.
+
+%% Backward compatibility for rebar3 > 3.14.0
+opt_spec_list() ->
+    Module =
+        case erlang:function_exported(rebar_relx, opt_spec_list, 0) of
+            true -> rebar_relx;
+            false -> relx
+        end,
+    Module:opt_spec_list().

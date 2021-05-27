@@ -38,7 +38,7 @@ init( State ) ->
                {bare, true},
                {deps, ?DEPS},
                {example, "rebar3 erllambda release"},
-               {opts, relx:opt_spec_list()},
+               {opts, rebar3_erllambda:opt_spec_list()},
                {short_desc, "Rebar3 erllambda release provider"},
                {desc,
                 "Performs erllamba specific release generation on top of the "

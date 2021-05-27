@@ -37,7 +37,7 @@ init( State ) ->
                {bare, true},
                {deps, []},
                {example, "rebar3 erllambda zip"},
-               {opts, relx:opt_spec_list()},
+               {opts, rebar3_erllambda:opt_spec_list()},
                {short_desc, "Rebar3 erllambda zip provider"},
                {desc, "Generates a deployable AWS lambda zip file."}
               ],
